@@ -285,7 +285,8 @@ def test_native_uuid(cursor: pyodbc.Cursor):
     cursor.execute("insert into t1 values (?)", value)
 
     pyodbc.native_uuid = True
-    result = cursor.execute("select n from t1").fetchval()
+    cursor.execute("select n from t1")
+    result = cursor.fetchval()
     print(result, type(result), value, type(value))
     assert isinstance(result, uuid.UUID)
     assert value == result
