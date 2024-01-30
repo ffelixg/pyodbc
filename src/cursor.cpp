@@ -1431,15 +1431,27 @@ static PyObject* Cursor_fetchval(PyObject* self, PyObject* args)
     UNUSED(args);
 
     Cursor* cursor = Cursor_Validate(self, CURSOR_REQUIRE_RESULTS | CURSOR_RAISE_ERROR);
-    if (!cursor || !DetectConfigChange(cursor))
+    
+    if (!cursor)
+    {
+        PyErr_SetString(PyExc_ValueError, "fail in Cursor_Validate.");
         return 0;
+    }
+    if (!DetectConfigChange(cursor))
+    {
+        PyErr_SetString(PyExc_ValueError, "fail in DetectConfigChange.");
+        return 0;
+    }
 
     Object row(Cursor_fetch(cursor));
 
     if (!row)
     {
         if (PyErr_Occurred())
+        {
+            PyErr_SetString(PyExc_ValueError, "fail in Cursor_fetch.");
             return 0;
+        }
         Py_RETURN_NONE;
     }
 
