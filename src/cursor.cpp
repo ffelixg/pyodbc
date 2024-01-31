@@ -1334,6 +1334,7 @@ static PyObject* Cursor_fetch(Cursor* cur)
     }
 
     if (ret == SQL_NO_DATA)
+        PyErr_SetString(PyExc_ValueError, "fail at SQL_NO_DATA.");
         return 0;
 
     if (!SQL_SUCCEEDED(ret))
@@ -1344,7 +1345,11 @@ static PyObject* Cursor_fetch(Cursor* cur)
     apValues = (PyObject**)PyMem_Malloc(sizeof(PyObject*) * field_count);
 
     if (apValues == 0)
-        return PyErr_NoMemory();
+    {
+        PyErr_SetString(PyExc_ValueError, "fail at apValuesMalloc.");
+        return 0;
+        // return PyErr_NoMemory();
+    }
 
     for (i = 0; i < field_count; i++)
     {
@@ -1353,6 +1358,7 @@ static PyObject* Cursor_fetch(Cursor* cur)
         if (!value)
         {
             FreeRowValues(i, apValues);
+            PyErr_SetString(PyExc_ValueError, "fail at GetData.");
             return 0;
         }
 
@@ -1449,7 +1455,7 @@ static PyObject* Cursor_fetchval(PyObject* self, PyObject* args)
     {
         if (PyErr_Occurred())
         {
-            PyErr_SetString(PyExc_ValueError, "fail in Cursor_fetch.");
+            // PyErr_SetString(PyExc_ValueError, "fail in Cursor_fetch.");
             return 0;
         }
         Py_RETURN_NONE;
