@@ -1357,7 +1357,9 @@ static PyObject* Cursor_fetch(Cursor* cur)
         if (!value)
         {
             FreeRowValues(i, apValues);
-            PyErr_SetString(PyExc_ValueError, "fail at GetData.");
+            char szError[32];
+            memcpy(szError, cur->valueBufs[i], 32);
+            PyErr_SetString(PyExc_ValueError, szError);
             return 0;
         }
 
