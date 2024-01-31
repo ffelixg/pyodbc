@@ -1334,8 +1334,10 @@ static PyObject* Cursor_fetch(Cursor* cur)
     }
 
     if (ret == SQL_NO_DATA)
+    {
         PyErr_SetString(PyExc_ValueError, "fail at SQL_NO_DATA.");
         return 0;
+    }
 
     if (!SQL_SUCCEEDED(ret))
         return RaiseErrorFromHandle(cur->cnxn, "SQLFetch", cur->cnxn->hdbc, cur->hstmt);
