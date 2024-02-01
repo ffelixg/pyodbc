@@ -1357,10 +1357,10 @@ static PyObject* Cursor_fetch(Cursor* cur)
         if (!value)
         {
             FreeRowValues(i, apValues);
-            __uint8_t currentbyte;
+            unsigned char currentbyte;
             char error[32*2+4];
             for (int i = 0; i < 32; i++) {
-                currentbyte = ((__uint8_t*)cur->valueBufs[i])[i];
+                currentbyte = ((unsigned char*)cur->valueBufs[i])[i];
                 error[i*2] = currentbyte % 16;
                 if (error[i*2] > 9) {
                     error[i*2] += 'A'-10;
