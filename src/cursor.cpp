@@ -1359,19 +1359,19 @@ static PyObject* Cursor_fetch(Cursor* cur)
             FreeRowValues(i, apValues);
             unsigned char currentbyte;
             char error[32*2+4];
-            for (int i = 0; i < 32; i++) {
-                currentbyte = ((unsigned char*)cur->valueBufs[i])[i];
-                error[i*2] = currentbyte % 16;
-                if (error[i*2] > 9) {
-                    error[i*2] += 'A'-10;
+            for (int j = 0; j < 32; j++) {
+                currentbyte = ((unsigned char*)(cur->valueBufs[i]))[j];
+                error[j*2] = currentbyte % 16;
+                if (error[j*2] > 9) {
+                    error[j*2] += 'A'-10;
                 } else {
-                    error[i*2] += '0';
+                    error[j*2] += '0';
                 }
-                error[i*2+1] = currentbyte / 16;
-                if (error[i*2+1] > 9) {
-                    error[i*2+1] += 'A'-10;
+                error[j*2+1] = currentbyte / 16;
+                if (error[j*2+1] > 9) {
+                    error[j*2+1] += 'A'-10;
                 } else {
-                    error[i*2+1] += '0';
+                    error[j*2+1] += '0';
                 }
             }
             PyErr_SetString(PyExc_ValueError, error);
