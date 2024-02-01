@@ -267,7 +267,8 @@ def test_noscan(cursor: pyodbc.Cursor):
 def test_nonnative_uuid(cursor: pyodbc.Cursor):
     # The default is False meaning we should return a string.  Note that
     # SQL Server seems to always return uppercase.
-    value = uuid.uuid4()
+    # value = uuid.uuid4()
+    value = uuid.UUID('4fe34a93-e574-04cc-200a-353f0d1770b1')
     cursor.execute("create table t1(n uniqueidentifier)")
     cursor.execute("insert into t1 values (?)", value)
 

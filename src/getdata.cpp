@@ -934,7 +934,7 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
         if (UseNativeUUID())
         {
             c_type = SQL_C_GUID;
-            size = sizeof(PYSQLGUID);
+            size = (sizeof(PYSQLGUID)+2)*2;
         }
         else
         {
