@@ -1319,6 +1319,7 @@ static PyObject* Cursor_fetch(Cursor* cur)
     // Returns a Row object if successful.  If there are no more rows, zero is returned.  If an error occurs, an
     // exception is set and zero is returned.  (To differentiate between the last two, use PyErr_Occurred.)
 
+    printf("fetching\n");
     SQLRETURN ret = 0;
     Py_ssize_t field_count, i;
     PyObject** apValues;

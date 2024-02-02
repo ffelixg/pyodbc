@@ -614,10 +614,12 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     const char* szFmt = "(yyy#)";
     Object args(Py_BuildValue(szFmt, NULL, NULL, &guid, (int)sizeof(guid)));
     if (!args)
+        printf("Failed to build args\n");
         return 0;
 
     PyObject* uuid_type = GetClassForThread("uuid", "UUID");
     if (!uuid_type)
+        printf("Failed to get uuid type\n");
         return 0;
     PyObject* uuid = PyObject_CallObject(uuid_type, args.Get());
     Py_DECREF(uuid_type);
@@ -933,8 +935,10 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
     case SQL_GUID:
         if (UseNativeUUID())
         {
-            c_type = SQL_C_GUID;
-            size = (sizeof(PYSQLGUID)+2)*2;
+            return true;
+            // c_type = SQL_GUID;
+            // // size = sizeof(PYSQLGUID);
+            // size = 4000;
         }
         else
         {
@@ -999,6 +1003,8 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
     default:
         return true;
     }
+
+    // size = (size+2)*8;
 
     cur->valueBufs[iCol] = PyMem_Malloc(size);
     if (!cur->valueBufs[iCol])
