@@ -1358,24 +1358,25 @@ static PyObject* Cursor_fetch(Cursor* cur)
         if (!value)
         {
             FreeRowValues(i, apValues);
-            unsigned char currentbyte;
-            char error[32*2+4];
-            for (int j = 0; j < 32; j++) {
-                currentbyte = ((unsigned char*)(cur->valueBufs[i]))[j];
-                error[j*2] = currentbyte % 16;
-                if (error[j*2] > 9) {
-                    error[j*2] += 'A'-10;
-                } else {
-                    error[j*2] += '0';
-                }
-                error[j*2+1] = currentbyte / 16;
-                if (error[j*2+1] > 9) {
-                    error[j*2+1] += 'A'-10;
-                } else {
-                    error[j*2+1] += '0';
-                }
-            }
-            PyErr_SetString(PyExc_ValueError, error);
+            // unsigned char currentbyte;
+            // char error[32*2+4];
+            // for (int j = 0; j < 32; j++) {
+            //     currentbyte = ((unsigned char*)(cur->valueBufs[i]))[j];
+            //     error[j*2] = currentbyte % 16;
+            //     if (error[j*2] > 9) {
+            //         error[j*2] += 'A'-10;
+            //     } else {
+            //         error[j*2] += '0';
+            //     }
+            //     error[j*2+1] = currentbyte / 16;
+            //     if (error[j*2+1] > 9) {
+            //         error[j*2+1] += 'A'-10;
+            //     } else {
+            //         error[j*2+1] += '0';
+            //     }
+            // }
+            // PyErr_SetString(PyExc_ValueError, error);
+            // PyErr_SetString(PyExc_ValueError, "oof");
             return 0;
         }
 
