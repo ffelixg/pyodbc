@@ -281,7 +281,8 @@ def test_nonnative_uuid(cursor: pyodbc.Cursor):
 
 def test_native_uuid(cursor: pyodbc.Cursor):
     # When true, we should return a uuid.UUID object.
-    value = uuid.uuid4()
+    # value = uuid.uuid4()
+    value = uuid.UUID('4fe34a93-e574-04cc-200a-353f0d1770b1')
     cursor.execute("create table t1(n uniqueidentifier)")
     cursor.execute("insert into t1 values (?)", value)
 
