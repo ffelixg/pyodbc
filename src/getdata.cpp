@@ -585,7 +585,7 @@ static PyObject* GetSqlServerTime(Cursor* cur, Py_ssize_t iCol)
     return PyTime_FromTime(value.hour, value.minute, value.second, micros);
 }
 
-struct PYSQLGUIXD
+typedef struct tagPYSQLGUIXD
 {
     // I was hoping to use uint32_t, etc., but they aren't included in a Python build.  I'm not
     // going to require that the compilers supply anything beyond that.  There is PY_UINT32_T,
@@ -595,10 +595,27 @@ struct PYSQLGUIXD
     // WORD Data2;
     // WORD Data3;
     // byte Data4[14];
-    byte Data4[16];
+    // byte Data4[16];
     // byte Data4[18];
     // byte Data4[22];
-};
+
+    byte Data0;
+    byte Data1;
+    byte Data2;
+    byte Data3;
+    byte Data4;
+    byte Data5;
+    byte Data6;
+    byte Data7;
+    byte Data8;
+    byte Data9;
+    byte Data10;
+    byte Data11;
+    byte Data12;
+    byte Data13;
+    byte Data14;
+    byte Data15;
+} PYSQLGUIXD;
 
 static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
 {
@@ -610,8 +627,13 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     int sz = sizeof(PYSQLGUIXD);
     PYSQLGUIXD* valueBuf = (PYSQLGUIXD*)(cur->valueBufs[iCol]);
     PYSQLGUIXD* valueBuf2 = (PYSQLGUIXD*)PyMem_Malloc(sz);
-    // PYSQLGUIXD guid = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // neither of these two work
+    // PYSQLGUIXD guid;
     // PYSQLGUIXD* valueBuf2 = &guid;
+
+    // byte guid[16];
+    // PYSQLGUIXD* valueBuf2 = (PYSQLGUIXD*)(&guid);
 
     if (!valueBuf)
     {
