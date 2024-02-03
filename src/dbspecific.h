@@ -36,7 +36,7 @@ struct PYSQLGUID
     DWORD Data1;
     WORD Data2;
     WORD Data3;
-    byte Data4[8];
+    byte Data4[14];
 };
 
 #endif // DBSPECIFIC_H

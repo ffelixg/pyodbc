@@ -605,22 +605,42 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     }
     else
     {
-        Py_MEMCPY(&guid, valueBuf, sizeof(guid));
+        memcpy(&guid, valueBuf, (int)sizeof(guid));
     }
+
+    printf("%p :", valueBuf);
+    for (int i = 0; i < sizeof(guid); i++)
+    {
+        printf("%u ", ((unsigned char *)(&guid))[i]);
+    }
+    printf("\n");
+    // Py_RETURN_NONE;
 
     if (cbFetched == SQL_NULL_DATA)
         Py_RETURN_NONE;
 
     const char* szFmt = "(yyy#)";
-    Object args(Py_BuildValue(szFmt, NULL, NULL, &guid, (int)sizeof(guid)));
+    PyObject* test;
+    if (!valueBuf) {
+        test = Py_BuildValue(szFmt, NULL, NULL, &guid, (int)sizeof(guid));
+    } else {
+        test = Py_BuildValue(szFmt, NULL, NULL, valueBuf, (int)sizeof(guid));
+    }
+    Object args(test);
     if (!args)
+    {
         printf("Failed to build args\n");
+        PyErr_SetString(PyExc_ValueError, "Failed to build args");
         return 0;
+    }
 
     PyObject* uuid_type = GetClassForThread("uuid", "UUID");
     if (!uuid_type)
+    {
         printf("Failed to get uuid type\n");
+        PyErr_SetString(PyExc_ValueError, "Failed to get uuid type");
         return 0;
+    }
     PyObject* uuid = PyObject_CallObject(uuid_type, args.Get());
     Py_DECREF(uuid_type);
     return uuid;
@@ -935,10 +955,10 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
     case SQL_GUID:
         if (UseNativeUUID())
         {
-            return true;
-            // c_type = SQL_GUID;
-            // // size = sizeof(PYSQLGUID);
-            // size = 4000;
+            // return true;
+            c_type = SQL_GUID;
+            // size = sizeof(PYSQLGUID);
+            size = 4000;
         }
         else
         {
@@ -1004,9 +1024,9 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
         return true;
     }
 
-    // size = (size+2)*8;
+    size = (size+2)*8;
 
-    cur->valueBufs[iCol] = PyMem_Malloc(size);
+    cur->valueBufs[iCol] = PyMem_Calloc(size, 1);
     if (!cur->valueBufs[iCol])
     {
         PyErr_NoMemory();
