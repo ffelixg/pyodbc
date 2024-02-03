@@ -585,35 +585,65 @@ static PyObject* GetSqlServerTime(Cursor* cur, Py_ssize_t iCol)
     return PyTime_FromTime(value.hour, value.minute, value.second, micros);
 }
 
+struct PYSQLGUIXD
+{
+    // I was hoping to use uint32_t, etc., but they aren't included in a Python build.  I'm not
+    // going to require that the compilers supply anything beyond that.  There is PY_UINT32_T,
+    // but there is no 16-bit version.  We'll stick with Microsoft's WORD and DWORD which I
+    // believe the ODBC headers will have to supply.
+    // DWORD Data1;
+    // WORD Data2;
+    // WORD Data3;
+    // byte Data4[14];
+    byte Data4[16];
+    // byte Data4[18];
+    // byte Data4[22];
+};
+
 static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
 {
     // REVIEW: Since GUID is a fixed size, do we need to pass the size or cbFetched?
 
-    PYSQLGUID guid;
     SQLRETURN ret;
     SQLLEN cbFetched = cur->cbFetchedBufs[iCol];
-    void* valueBuf = cur->valueBufs[iCol];
+    // int sz = 16;
+    int sz = sizeof(PYSQLGUIXD);
+    PYSQLGUIXD* valueBuf = (PYSQLGUIXD*)(cur->valueBufs[iCol]);
+    PYSQLGUIXD* valueBuf2 = (PYSQLGUIXD*)PyMem_Malloc(sz);
+    // PYSQLGUIXD guid = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // PYSQLGUIXD* valueBuf2 = &guid;
 
     if (!valueBuf)
     {
         Py_BEGIN_ALLOW_THREADS
-        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_GUID, &guid, sizeof(guid), &cbFetched);
+        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_GUID, valueBuf2, sz, &cbFetched);
+        // memcpy(&guid, valueBuf2, sz);
         Py_END_ALLOW_THREADS
 
         if (!SQL_SUCCEEDED(ret))
             return RaiseErrorFromHandle(cur->cnxn, "SQLGetData", cur->cnxn->hdbc, cur->hstmt);
     }
-    else
-    {
-        memcpy(&guid, valueBuf, (int)sizeof(guid));
-    }
+    // else
+    // {
+    //     memcpy(valueBuf2, valueBuf, (int)sz);
+    // }
 
-    printf("%p :", valueBuf);
-    for (int i = 0; i < sizeof(guid); i++)
-    {
-        printf("%u ", ((unsigned char *)(&guid))[i]);
+    printf("guidsize: %d\n", sz);
+    printf("%p: ", valueBuf);
+    if (valueBuf) {
+        for (int i = 0; i < sz; i++)
+        {
+            printf("%u ", ((unsigned char *)(valueBuf))[i]);
+        }
     }
     printf("\n");
+    printf("%p: ", valueBuf2);
+    for (int i = 0; i < sz; i++)
+    {
+        printf("%u ", ((unsigned char *)(valueBuf2))[i]);
+    }
+    printf("\n");
+    printf("%p or\n", valueBuf ? valueBuf : valueBuf2);
     // Py_RETURN_NONE;
 
     if (cbFetched == SQL_NULL_DATA)
@@ -621,10 +651,20 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
 
     const char* szFmt = "(yyy#)";
     PyObject* test;
-    if (!valueBuf) {
-        test = Py_BuildValue(szFmt, NULL, NULL, &guid, (int)sizeof(guid));
-    } else {
-        test = Py_BuildValue(szFmt, NULL, NULL, valueBuf, (int)sizeof(guid));
+    // test = Py_BuildValue(szFmt, NULL, NULL, valueBuf2, (int)sz);
+    test = Py_BuildValue(szFmt, NULL, NULL, valueBuf ? valueBuf : valueBuf2, (int)sz);
+    // if (!valueBuf) {
+    //     // test = Py_BuildValue(szFmt, NULL, NULL, &guid, (int)22);
+    //     test = Py_BuildValue(szFmt, NULL, NULL, valueBuf2, (int)sz);
+    // } else {
+    //     // test = Py_BuildValue(szFmt, NULL, NULL, valueBuf, (int)22);
+    //     test = Py_BuildValue(szFmt, NULL, NULL, valueBuf, (int)sz);
+    // }
+    if (!test)
+    {
+        printf("Failed to build test\n");
+        PyErr_SetString(PyExc_ValueError, "Failed to build test");
+        return 0;
     }
     Object args(test);
     if (!args)
@@ -957,7 +997,7 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
         {
             // return true;
             c_type = SQL_GUID;
-            // size = sizeof(PYSQLGUID);
+            // size = sizeof(PYSQLGUIXD);
             size = 4000;
         }
         else
