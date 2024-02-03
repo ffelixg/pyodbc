@@ -158,6 +158,7 @@ struct Cursor
     // Pointers to buffers used by SQLBindCol.
     void** valueBufs;
     SQLLEN* cbFetchedBufs;
+    int max_bound_col;
 
     // Track the configuration at the time of using SQLBindCol.
     bool bound_native_uuid;

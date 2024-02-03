@@ -362,17 +362,23 @@ static bool BindCols(Cursor* cur, int cCols)
     SQLFreeStmt(cur->hstmt, SQL_UNBIND); // somehow columns can still be bound here
     Py_END_ALLOW_THREADS;
 
+    bool keep_binding = true;
+    cur->max_bound_col = cCols - 1;
     for (i = 0; i < cCols; i++)
     {
-        if (!BindCol(cur, i))
+        if (!BindCol(cur, i, keep_binding))
         {
             BindColsFree(cur, cCols);
             return false;
         }
         if (!cur->valueBufs[i])
         {
+            if (keep_binding)
+            {
+                cur->max_bound_col = i - 1;
+            }
             // Could not bind column -> have to use SQLGetData for the remaining columns.
-            break;
+            keep_binding = false;
         }
     }
 
@@ -2663,6 +2669,7 @@ Cursor_New(Connection* cnxn)
         cur->cbFetchedBufs     = 0;
         cur->bound_converted_types = 0;
         cur->bound_native_uuid = 0;
+        cur->max_bound_col     = -1;
 
         Py_INCREF(cnxn);
         Py_INCREF(cur->description);
