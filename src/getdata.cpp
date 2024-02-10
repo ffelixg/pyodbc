@@ -589,7 +589,7 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
 {
     // REVIEW: Since GUID is a fixed size, do we need to pass the size or cbFetched?
 
-    PYSQLGUID guid;
+    byte* guid[16];
     SQLRETURN ret;
     SQLLEN cbFetched = cur->cbFetchedBufs[iCol];
     void* valueBuf = cur->valueBufs[iCol];
@@ -597,7 +597,7 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     if (!valueBuf)
     {
         Py_BEGIN_ALLOW_THREADS
-        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_GUID, &guid, sizeof(guid), &cbFetched);
+        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_GUID, guid, 16, &cbFetched);
         Py_END_ALLOW_THREADS
 
         if (!SQL_SUCCEEDED(ret))
@@ -605,14 +605,14 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     }
     else
     {
-        Py_MEMCPY(&guid, valueBuf, sizeof(guid));
+        Py_MEMCPY(guid, valueBuf, 16);
     }
 
     if (cbFetched == SQL_NULL_DATA)
         Py_RETURN_NONE;
 
     const char* szFmt = "(yyy#)";
-    Object args(Py_BuildValue(szFmt, NULL, NULL, &guid, (int)sizeof(guid)));
+    Object args(Py_BuildValue(szFmt, NULL, NULL, guid, 16));
     if (!args)
         return 0;
 
