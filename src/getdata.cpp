@@ -936,9 +936,10 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
             // Binding here does not work on 64bit Windows, so we don't.
             // Not sure why, it works everywhere else.
 
-            // c_type = SQL_GUID;
+            c_type = SQL_GUID;
+            size = 16;
             // size = sizeof(PYSQLGUID);
-            return true;
+            // return true;
         }
         else
         {
