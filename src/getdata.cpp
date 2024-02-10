@@ -589,15 +589,16 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
 {
     // REVIEW: Since GUID is a fixed size, do we need to pass the size or cbFetched?
 
-    byte* guid[16];
+    void* guid;
     SQLRETURN ret;
     SQLLEN cbFetched = cur->cbFetchedBufs[iCol];
     void* valueBuf = cur->valueBufs[iCol];
 
     if (!valueBuf)
     {
+        guid = PyMem_Malloc(16);
         Py_BEGIN_ALLOW_THREADS
-        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_GUID, guid, 16, &cbFetched);
+        ret = SQLGetData(cur->hstmt, (SQLUSMALLINT)(iCol+1), SQL_C_GUID, guid, 16, &cbFetched);
         Py_END_ALLOW_THREADS
 
         if (!SQL_SUCCEEDED(ret))
@@ -605,7 +606,7 @@ static PyObject* GetUUID(Cursor* cur, Py_ssize_t iCol)
     }
     else
     {
-        Py_MEMCPY(guid, valueBuf, 16);
+        guid = valueBuf;
     }
 
     if (cbFetched == SQL_NULL_DATA)
@@ -936,7 +937,7 @@ bool BindCol(Cursor* cur, Py_ssize_t iCol)
             // Binding here does not work on 64bit Windows, so we don't.
             // Not sure why, it works everywhere else.
 
-            c_type = SQL_GUID;
+            c_type = SQL_C_GUID;
             size = 16;
             // size = sizeof(PYSQLGUID);
             // return true;
