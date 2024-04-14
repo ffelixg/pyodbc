@@ -161,6 +161,7 @@ int GetDiagRecs(Cursor* cur);
 void Cursor_init();
 
 Cursor* Cursor_New(Connection* cnxn);
-PyObject* Cursor_execute(PyObject* self, PyObject* args);
+PyObject* Cursor_execute(PyObject* self, PyObject* args, PyObject* kwargs);
+
 
 #endif

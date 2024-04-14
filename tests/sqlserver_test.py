@@ -1603,6 +1603,26 @@ def _test_tvp(cursor: pyodbc.Cursor, diff_schema):
     result_array = cursor.execute(f"exec {procname} ?", p1).fetchall()
     assert result_array == params
 
+    cursor.execute("drop procedure " + procname)
+    cursor.commit()
+    cursor.execute("drop type " + typename)
+    cursor.commit()
+
+    cursor.execute(f"create type {typename} as table(val decimal(20,4) null)")
+    cursor.commit()
+
+    for params in (
+        [[Decimal('4.0000')], [Decimal('25.0000')]],
+        [[None], [Decimal('25.0000')]],
+    ):
+        (a,), (b,) = params
+        if diff_schema:
+            params = [typenameonly, schemaname, [Decimal('1111.1111')], *params]
+        else:
+            params = [typename, [Decimal('1111.1111')], *params]
+        (c,), (d,) = cursor.execute("select * from ?", [params], first_tvp_row_is_sample=True).fetchall()
+        assert a == c
+        assert b == d
 
 @pytest.mark.skipif(IS_FREEDTS, reason='FreeTDS does not support TVP')
 def test_tvp(cursor: pyodbc.Cursor):

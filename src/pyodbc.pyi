@@ -483,13 +483,15 @@ class Connection:
         """
         ...
 
-    def execute(self, sql: str, *params: Any) -> Cursor:
+    def execute(self, sql: str, *params: Any, first_tvp_row_is_sample: bool = False) -> Cursor:
         """A convenience function for running queries directly from a Connection object.
         Creates a new cursor, runs the SQL query, and returns the new cursor.
 
         Args:
             sql: The SQL query.
             *params: Any parameter values for the SQL query.
+            first_tvp_row_is_sample: If True, use the first row to determine data types only.
+                Used to avoid errors when the actual first row can be NULL or a too small decimal.
 
         Returns:
             A new cursor.
@@ -616,12 +618,14 @@ class Cursor:
         """Not supported."""
         ...
 
-    def execute(self, sql: str, *params: Any) -> Cursor:
+    def execute(self, sql: str, *params: Any, first_tvp_row_is_sample: bool = False) -> Cursor:
         """Run a SQL query and return the cursor.
 
         Args:
             sql: The SQL query.
             *params: Any parameters for the SQL query, as positional arguments or a single iterable.
+            first_tvp_row_is_sample: If True, use the first row to determine data types only.
+                Used to avoid errors when the actual first row can be NULL or a too small decimal.
 
         Returns:
             The cursor, so that calls on the cursor can be chained.

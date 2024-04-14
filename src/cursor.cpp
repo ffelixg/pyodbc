@@ -680,7 +680,7 @@ int GetDiagRecs(Cursor* cur)
 }
 
 
-static PyObject* execute(Cursor* cur, PyObject* pSql, PyObject* params, bool skip_first)
+static PyObject* execute(Cursor* cur, PyObject* pSql, PyObject* params, bool skip_first, bool first_tvp_row_is_sample)
 {
     // Internal function to execute SQL, called by .execute and .executemany.
     //
@@ -842,9 +842,9 @@ static PyObject* execute(Cursor* cur, PyObject* pSql, PyObject* params, bool ski
                 // TVP
                 // Need to convert its columns into the bound row buffers
                 int hasTvpRows = 0;
-                if (pInfo->curTvpRow < PySequence_Length(pInfo->pObject))
+                if (pInfo->curTvpRow + first_tvp_row_is_sample < PySequence_Length(pInfo->pObject))
                 {
-                    PyObject *tvpRow = PySequence_GetItem(pInfo->pObject, pInfo->curTvpRow);
+                    PyObject *tvpRow = PySequence_GetItem(pInfo->pObject, pInfo->curTvpRow + first_tvp_row_is_sample);
                     Py_XDECREF(tvpRow);
                     for (Py_ssize_t i = 0; i < PySequence_Size(tvpRow); i++)
                     {
@@ -990,8 +990,15 @@ static char execute_doc[] =
     "\n"
     "  cursor.execute(sql, param1, param2)\n";
 
-PyObject* Cursor_execute(PyObject* self, PyObject* args)
+PyObject* empty_tuple = PyTuple_New(0);
+char* Cursor_execute_kwnames[] = { "first_tvp_row_is_sample", 0 };
+
+PyObject* Cursor_execute(PyObject* self, PyObject* args, PyObject* kwargs)
 {
+    int first_tvp_row_is_sample = 0;
+    if (!PyArg_ParseTupleAndKeywords(empty_tuple, kwargs, "|p", Cursor_execute_kwnames, &first_tvp_row_is_sample))
+        return 0;
+
     Py_ssize_t cParams = PyTuple_Size(args) - 1;
 
     Cursor* cursor = Cursor_Validate(self, CURSOR_REQUIRE_OPEN | CURSOR_RAISE_ERROR);
@@ -1032,7 +1039,7 @@ PyObject* Cursor_execute(PyObject* self, PyObject* args)
 
     // Execute.
 
-    return execute(cursor, pSql, params, skip_first);
+    return execute(cursor, pSql, params, skip_first, (bool)first_tvp_row_is_sample);
 }
 
 
@@ -1074,7 +1081,7 @@ static PyObject* Cursor_executemany(PyObject* self, PyObject* args)
             for (Py_ssize_t i = 0; i < c; i++)
             {
                 PyObject* params = PySequence_GetItem(param_seq, i);
-                PyObject* result = execute(cursor, pSql, params, false);
+                PyObject* result = execute(cursor, pSql, params, false, false);
                 bool success = result != 0;
                 Py_XDECREF(result);
                 Py_DECREF(params);
@@ -1104,7 +1111,7 @@ static PyObject* Cursor_executemany(PyObject* self, PyObject* args)
 
         while (params.Attach(PyIter_Next(iter)))
         {
-            PyObject* result = execute(cursor, pSql, params, false);
+            PyObject* result = execute(cursor, pSql, params, false, false);
             bool success = result != 0;
             Py_XDECREF(result);
 
@@ -2388,7 +2395,7 @@ static PyObject* Cursor_exit(PyObject* self, PyObject* args)
 static PyMethodDef Cursor_methods[] =
 {
     { "close",            (PyCFunction)Cursor_close,            METH_NOARGS,                close_doc            },
-    { "execute",          (PyCFunction)Cursor_execute,          METH_VARARGS,               execute_doc          },
+    { "execute",          (PyCFunction)Cursor_execute,          METH_VARARGS|METH_KEYWORDS, execute_doc          },
     { "executemany",      (PyCFunction)Cursor_executemany,      METH_VARARGS,               executemany_doc      },
     { "setinputsizes",    (PyCFunction)Cursor_setinputsizes,    METH_O,                     setinputsizes_doc    },
     { "setoutputsize",    (PyCFunction)Cursor_ignored,          METH_VARARGS,               ignored_doc          },

@@ -469,7 +469,7 @@ static PyObject* Connection_cursor(PyObject* self, PyObject* args)
     return (PyObject*)Cursor_New(cnxn);
 }
 
-static PyObject* Connection_execute(PyObject* self, PyObject* args)
+static PyObject* Connection_execute(PyObject* self, PyObject* args, PyObject* kwargs)
 {
     PyObject* result = 0;
 
@@ -483,7 +483,7 @@ static PyObject* Connection_execute(PyObject* self, PyObject* args)
     if (!cursor)
         return 0;
 
-    result = Cursor_execute((PyObject*)cursor, args);
+    result = Cursor_execute((PyObject*)cursor, args, kwargs);
 
     Py_DECREF((PyObject*)cursor);
 
@@ -1366,7 +1366,7 @@ static struct PyMethodDef Connection_methods[] =
 {
     { "cursor",                  Connection_cursor,          METH_NOARGS,  cursor_doc     },
     { "close",                   Connection_close,           METH_NOARGS,  close_doc      },
-    { "execute",                 Connection_execute,         METH_VARARGS, execute_doc    },
+    { "execute",                 (PyCFunction)Connection_execute,         METH_VARARGS|METH_KEYWORDS, execute_doc    },
     { "commit",                  Connection_commit,          METH_NOARGS,  commit_doc     },
     { "rollback",                Connection_rollback,        METH_NOARGS,  rollback_doc   },
     { "getinfo",                 Connection_getinfo,         METH_VARARGS, getinfo_doc    },
