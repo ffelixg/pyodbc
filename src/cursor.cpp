@@ -210,7 +210,7 @@ static bool create_name_map(Cursor* cur, SQLSMALLINT field_count, bool lower)
 
         TRACE("Col %d: type=%s (%d) colsize=%d\n", (i+1), SqlTypeName(nDataType), (int)nDataType, (int)nColSize);
 
-        Object name(TextBufferToObject(&enc, (const byte*)szName, cbName));
+        Object name(TextBufferToObject(enc, (const byte*)szName, cbName));
 
         if (!name)
             goto done;
