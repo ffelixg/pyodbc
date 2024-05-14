@@ -252,16 +252,7 @@ static PyObject* GetBinary(void* buffer, SQLLEN cbFetched, PyObject* converter, 
 
 static PyObject* GetDataUser(void* buffer, SQLLEN cbFetched, PyObject* converter, TextEnc* enc)
 {
-    PyObject* value = PyBytes_FromStringAndSize((char*)buffer, (Py_ssize_t)cbFetched);
-    if (!value)
-        return 0;
-
-    PyObject* result = PyObject_CallFunction(converter, "(O)", value);
-    Py_DECREF(value);
-    if (!result)
-        return 0;
-
-    return result;
+    return PyObject_CallFunction(converter, "y#", (char*)buffer, (Py_ssize_t)cbFetched);
 }
 
 
@@ -322,11 +313,7 @@ static PyObject* GetUUID(void* buffer, SQLLEN cbFetched, PyObject* converter, Te
         if (!uuid_type)
             return 0;
     }
-    return PyObject_CallFunction(
-        uuid_type, "OON",
-        Py_None, Py_None,
-        PyBytes_FromStringAndSize((char*)buffer, (Py_ssize_t)16)
-    );
+    return PyObject_CallFunction(uuid_type, "yyy#", 0, 0, (char*)buffer, (Py_ssize_t)16);
 }
 
 
